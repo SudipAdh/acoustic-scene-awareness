@@ -1,0 +1,27 @@
+# Virtual environment
+.venv/
+venv/
+
+# Datasets (too large for git — download via scripts/download_data.sh)
+data/raw/
+data/processed/
+*.wav
+*.zip
+*.tar.gz
+
+# Trained model weights (large binaries)
+models/*.pt
+models/*.pth
+models/*.ckpt
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Logs
+results/logs/*.log
