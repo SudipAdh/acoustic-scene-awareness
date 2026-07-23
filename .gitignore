@@ -25,3 +25,15 @@ __pycache__/
 
 # Logs
 results/logs/*.log
+
+# Keep the report's logo asset (figures/ is otherwise generated)
+!results/figures/college_logo.png
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
