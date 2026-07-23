@@ -1,0 +1,42 @@
+{
+  "us8k_shape": [
+    8732,
+    64,
+    173
+  ],
+  "us8k_class_counts": {
+    "dog_bark": 1000,
+    "children_playing": 1000,
+    "air_conditioner": 1000,
+    "street_music": 1000,
+    "engine_idling": 1000,
+    "jackhammer": 1000,
+    "drilling": 1000,
+    "siren": 929,
+    "car_horn": 429,
+    "gun_shot": 374
+  },
+  "esc50_novel_shape": [
+    320,
+    64,
+    173
+  ],
+  "esc50_novel_classes": [
+    "can_opening",
+    "clock_alarm",
+    "crying_baby",
+    "door_wood_creaks",
+    "door_wood_knock",
+    "footsteps",
+    "glass_breaking",
+    "water_drops"
+  ],
+  "feature": {
+    "sample_rate": 22050,
+    "n_mels": 64,
+    "n_fft": 1024,
+    "hop_length": 512,
+    "clip_seconds": 4.0,
+    "n_frames": 173
+  }
+}
