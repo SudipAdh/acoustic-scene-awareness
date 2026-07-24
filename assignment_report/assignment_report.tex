@@ -130,7 +130,9 @@
 
 % -- project links
 \newcommand{\repourl}{https://github.com/SudipAdh/acoustic-scene-awareness}
-\newcommand{\loomurl}{\textcolor{red}{\textbf{[LOOM LINK TO BE INSERTED]}}}
+\newcommand{\youtubeurl}{\textcolor{red}{\textbf{[YOUTUBE DEMO LINK TO BE INSERTED]}}}
+\newcommand{\dsurbanurl}{https://urbansounddataset.weebly.com/urbansound8k.html}
+\newcommand{\dsescurl}{https://github.com/karolpiczak/ESC-50}
 
 \begin{document}
 
@@ -494,13 +496,15 @@ Metrics are written as JSON to \texttt{results/logs/}, and every figure in this 
 All source code, the LaTeX sources for this report, generated figures, per-experiment result files, and a recorded demonstration are accessible at:
 
 \begin{itemize}[leftmargin=2.2em]
-    \item \textbf{Source code repository} (GitHub):\\
+    \item \textbf{Source code repository} (public GitHub):\\
           \url{\repourl}
-    \item \textbf{Demonstration video} (Loom):\\
-          \loomurl
+    \item \textbf{Demonstration video} (YouTube):\\
+          \youtubeurl
     \item \textbf{Live demonstration application:} \texttt{demo/live\_demo.py} in the repository.
     \item \textbf{Generated figures and metrics:} \texttt{results/figures/} and \texttt{results/logs/} in the repository.
 \end{itemize}
+
+These links are also collected in Appendix~\ref{app:links} as required.
 
 The repository mirrors the layout described above. Neither dataset is redistributed in the repository, in line with their CC BY-NC licences; \texttt{scripts/download\_data.sh} retrieves both from their official sources, and the README documents the process.
 
@@ -747,6 +751,24 @@ A. Paszke et al., ``PyTorch: An imperative style, high-performance deep learning
 \appendix
 
 %% ============================================================
+\section{Submission Resources and Links}
+\label{app:links}
+%% ============================================================
+
+\begin{itemize}[leftmargin=2.2em]
+    \item \textbf{GitHub repository} (public):\\
+          \url{\repourl}
+    \item \textbf{Dataset --- UrbanSound8K} (primary, 8{,}732 clips, 10 classes):\\
+          \url{\dsurbanurl}
+    \item \textbf{Dataset --- ESC-50} (unseen sounds for novelty detection, 2{,}000 clips):\\
+          \url{\dsescurl}
+    \item \textbf{YouTube demonstration video:}\\
+          \youtubeurl
+\end{itemize}
+
+The repository is public and contains the complete source code, the LaTeX sources for this report, all generated figures, the per-experiment result files, the Colab notebook, and the trained model weights. Neither dataset is redistributed in the repository, in line with their CC~BY-NC licences; \texttt{scripts/download\_data.sh} retrieves both from the official sources above.
+
+%% ============================================================
 \section{Project Proposal (As Submitted)}
 \label{app:proposal}
 %% ============================================================
@@ -784,12 +806,12 @@ bash scripts/download_data.sh
 \textcolor{red}{\textbf{[Insert screen captures of each experiment stage executing, showing the device and software environment, per the assignment brief.]}}
 
 %% ============================================================
-\section{Source Code}
+\section{Key Implementation Code}
 \label{app:code}
 %% ============================================================
 
-The complete source is available at \url{\repourl}. Every module is reproduced below in full, in the order it is used in the pipeline.
+The complete, runnable source code is public at \url{\repourl}; the entire codebase is therefore not reproduced here. The listings below capture the sections most important to understanding the implementation, and the five core excerpts (the log-mel front-end, the official fold split, the CNN forward pass, the novelty score, and the threshold calibration) appear inline in Section~\ref{sec:impl}. Screen captures of these sections in the development environment follow.
 
-\input{source_appendix}
+\textcolor{red}{\textbf{[Insert screenshots of the important code sections (e.g.\ \texttt{src/models.py} AudioCNN and ConvAutoencoder, \texttt{src/data.py} mel-spectrogram and fold split, \texttt{src/train.py} cross-validation loop, \texttt{demo/live\_demo.py} inference), taken in your editor. Formatted versions of these are already shown inline in Section~\ref{sec:impl}.]}}
 
 \end{document}
