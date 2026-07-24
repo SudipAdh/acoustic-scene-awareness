@@ -193,11 +193,9 @@ Commercial systems already exist in this space --- Apple's Sound Recognition and
 
 \subsection{Why This Is a Neural Network Problem}
 
-It is worth being explicit about why this task requires neural networks rather than the classical machine learning methods studied in other modules. Raw audio is a waveform sampled at tens of thousands of values per second; there is no meaningful way to present that directly to a decision tree, a support vector machine, or a logistic regression. Classical approaches to audio therefore depend on a human first deciding which summary statistics matter --- zero-crossing rate, spectral centroid, a handful of MFCC coefficients --- and the quality of the result is bounded by the quality of that hand-engineering.
+Raw audio is a waveform sampled at tens of thousands of values per second; there is no meaningful way to feed that directly to a decision tree, an SVM, or a logistic regression. Classical approaches therefore depend on a human first deciding which summary statistics matter --- zero-crossing rate, spectral centroid, a handful of MFCC coefficients --- and the result is bounded by the quality of that hand-engineering.
 
-A convolutional network removes that bottleneck. Presented with a spectrogram, it learns its own filters: early layers respond to local time--frequency texture such as onsets, harmonic stacks, and broadband noise, and deeper layers compose those primitives into class-level patterns. The representation is discovered from data rather than specified in advance. This property --- \emph{representation learning} --- is the defining capability of artificial neural networks and the reason the field displaced feature-engineering pipelines in audio, vision, and language.
-
-The novelty-detection task reinforces the point. An autoencoder learns a compressed internal code for the sounds it has seen and rebuilds the input from that code. Nothing in classical supervised learning provides an equivalent mechanism for saying \emph{``this input is unlike anything I was trained on''} without being given negative examples in advance.
+A convolutional network removes that bottleneck: presented with a spectrogram, it learns its own filters, with early layers responding to local time--frequency texture (onsets, harmonic stacks, broadband noise) and deeper layers composing these into class-level patterns. This \emph{representation learning} --- discovering features from data rather than specifying them in advance --- is the defining capability of artificial neural networks and the reason they displaced feature-engineering pipelines in audio, vision, and language. The novelty task reinforces the point: an autoencoder learns a compressed code for the sounds it has seen, and nothing in classical supervised learning provides an equivalent way to flag \emph{``this input is unlike anything I was trained on''} without negative examples in advance.
 
 \subsection{Project Objectives}
 
@@ -212,18 +210,14 @@ The novelty-detection task reinforces the point. An autoencoder learns a compres
 
 \subsection{Original Contributions}
 
-The individual components --- CNNs on mel-spectrograms, autoencoder anomaly scoring --- are established techniques. The contributions of this work are in their combination and in the rigour of the evaluation:
+The individual components --- CNNs on mel-spectrograms, autoencoder anomaly scoring --- are established. The contributions here are their combination and the rigour of the evaluation:
 
 \begin{itemize}[leftmargin=2.2em]
-    \item \textbf{An open-set framing of a closed-set benchmark.} UrbanSound8K is almost always treated as a ten-way classification problem. Here the classifier is paired with a novelty detector and evaluated against genuinely unseen sound classes drawn from a second dataset (ESC-50), which is the situation any deployed assistive device actually faces.
-    \item \textbf{An honest baseline for the novelty detector.} Rather than presenting autoencoder reconstruction error in isolation, it is compared directly against thresholding the classifier's own softmax confidence --- the cheap alternative that a reviewer would immediately propose.
-    \item \textbf{A parameter-matched argument for convolution.} The MLP baseline is deliberately larger than the CNN, so the comparison isolates architectural inductive bias rather than model capacity.
-    \item \textbf{A real-time deployment.} The trained networks run live on laptop hardware with both models in the loop, demonstrating that the system is practical rather than purely offline.
+    \item \textbf{An open-set framing of a closed-set benchmark.} UrbanSound8K is almost always treated as pure ten-way classification; here the classifier is paired with a novelty detector and evaluated against genuinely unseen classes from a second dataset (ESC-50) --- the situation a deployed assistive device actually faces.
+    \item \textbf{An honest baseline for the novelty detector.} Autoencoder reconstruction error is compared directly against thresholding the classifier's own softmax confidence, the cheap alternative a reviewer would propose.
+    \item \textbf{A parameter-matched argument for convolution.} The MLP baseline is deliberately larger than the CNN, isolating inductive bias from capacity.
+    \item \textbf{A real-time deployment.} Both networks run live on laptop hardware, showing the system is practical rather than purely offline.
 \end{itemize}
-
-\subsection{Report Structure}
-
-Section~\ref{sec:related} reviews related work. Section~\ref{sec:data} describes both datasets and the evaluation protocol. Section~\ref{sec:method} sets out the audio front-end and the three network architectures. Section~\ref{sec:impl} covers implementation with reference to the source code. Section~\ref{sec:results} presents and discusses results across all four tasks. Sections~\ref{sec:limitations} and~\ref{sec:ethics} address limitations and the ethical dimension of always-on microphones, and Section~\ref{sec:conclusion} concludes.
 
 %% ============================================================
 \section{Background and Related Work}
@@ -541,9 +535,9 @@ Table~\ref{tab:comparison} reports ten-fold cross-validated performance for the 
     \label{fig:comparison}
 \end{figure}
 
-The central finding is that the convolutional network outperforms the perceptron by \cnnVsMlp\ percentage points of accuracy while using approximately fifteen times fewer parameters. Since the MLP has strictly greater capacity, the gap cannot be explained by model size; it is attributable to architectural inductive bias. Convolution encodes two assumptions that hold for spectrograms and that the MLP must otherwise learn from scratch: that informative structure is \emph{local} in time and frequency, and that the same pattern is meaningful wherever it appears. Weight sharing means a filter that detects a harmonic onset is learned once and applied everywhere, whereas the MLP must independently learn that pattern at every position it might occur --- with only a few thousand training examples to do so.
+The central finding is that the convolutional network outperforms the perceptron by \cnnVsMlp\ percentage points while using roughly fifteen times fewer parameters. Since the MLP has strictly greater capacity, the gap cannot be model size; it is architectural inductive bias. Convolution encodes two assumptions that hold for spectrograms and that the MLP must otherwise learn from scratch: informative structure is \emph{local} in time and frequency, and the same pattern is meaningful wherever it appears. Weight sharing learns a harmonic-onset filter once and applies it everywhere, whereas the MLP must relearn that pattern at every position --- from only a few thousand examples.
 
-Spectrogram-domain augmentation, by contrast, did \emph{not} improve performance: the augmented CNN scored \cnnAugAcc\% against \cnnAcc\% without it --- a statistically indistinguishable difference, and if anything a slightly higher fold-to-fold variance ($\pm$7.01 versus $\pm$\cnnAccSd). This is a negative result, and it is reported as one. The likely explanation is that the architecture is already strongly regularised: it combines dropout, weight decay, label smoothing, and global average pooling, and the validation curves in Figure~\ref{fig:training} show only mild overfitting to begin with. SpecAugment and time shifting add regularisation on top of a model that is not badly overfitting, so there is little headroom for them to recover, and the extra input perturbation appears to add noise to the fold estimates rather than signal. The finding is consistent with the wider literature observation that augmentation helps most when a model is data-starved and overfitting hard; that is not the regime this architecture operates in on UrbanSound8K. The remainder of the analysis therefore uses the unaugmented CNN as the primary model.
+Augmentation, by contrast, did \emph{not} help: the augmented CNN scored \cnnAugAcc\% against \cnnAcc\% without it, a statistically indistinguishable difference with slightly higher fold variance ($\pm$7.01 versus $\pm$\cnnAccSd). Reported as the negative result it is, the likely cause is that the architecture is already strongly regularised --- dropout, weight decay, label smoothing, and global average pooling --- so the validation curves in Figure~\ref{fig:training} show only mild overfitting to begin with. With little overfitting to recover, SpecAugment adds input noise rather than signal. This matches the literature view that augmentation helps most when a model is data-starved and overfitting hard, which is not the regime here. The remaining analysis therefore uses the unaugmented CNN.
 
 \begin{figure}[H]
     \centering
@@ -642,15 +636,11 @@ At the 95th-percentile threshold the autoencoder achieves precision \aePrec, rec
     \label{fig:recon}
 \end{figure}
 
-A finding worth emphasising is the classifier's confidence on sounds it has never encountered: mean maximum softmax probability on the unseen ESC-50 clips was \novelConf. A closed-set classifier does not merely make mistakes on unfamiliar input --- it makes them \emph{confidently}, because softmax normalises over the ten known classes and has no mechanism to express ``none of these''. For an assistive device this is the most dangerous failure mode available, since a confidently wrong label is more likely to be acted upon than an uncertain one. The autoencoder addresses exactly this gap, and the comparison in Table~\ref{tab:anomaly} quantifies how much it adds over the cheaper softmax heuristic.
+The key finding is the classifier's confidence on sounds it has never encountered: mean maximum softmax probability on the unseen ESC-50 clips was \novelConf. A closed-set classifier does not merely err on unfamiliar input --- it errs \emph{confidently}, because softmax normalises over the ten known classes and cannot express ``none of these''. For an assistive device this is the most dangerous failure mode, since a confidently wrong label is more likely to be acted upon. The autoencoder addresses exactly this gap, and Table~\ref{tab:anomaly} quantifies what it adds over the cheaper softmax heuristic.
 
 \subsection{Real-Time Demonstration}
 
-The trained models are deployed in \texttt{demo/live\_demo.py}, which maintains a rolling four-second microphone buffer, recomputes the spectrogram on the same front-end used in training, and runs both networks twice per second. The interface displays the live spectrogram, per-class confidence, and a status banner that distinguishes three states: a recognised ordinary sound, a recognised safety-critical sound, and a sound the autoencoder has flagged as unfamiliar.
-
-Two implementation details make this practical. Predictions are smoothed with an exponential moving average, without which single-frame noise causes visible flicker. And because the classifier is only \cnnParams{} parameters and the autoencoder \aeParams, both run comfortably in real time on laptop CPU or MPS, with measured inference at approximately \inferTime\ per window.
-
-A recorded walkthrough is linked in Section~\ref{sec:repo}.
+The trained models are deployed in \texttt{demo/live\_demo.py}, which keeps a rolling four-second microphone buffer, recomputes the spectrogram on the training front-end, and runs both networks twice per second. The interface shows the live spectrogram, per-class confidence, and a status banner with three states: an ordinary recognised sound, a safety-critical one, and a sound the autoencoder flags as unfamiliar. Predictions are smoothed with an exponential moving average to prevent single-frame flicker, and because the models are only \cnnParams{} and \aeParams{} parameters, both run in real time on laptop CPU or MPS (\inferTime\ per window). A recorded walkthrough is linked in Section~\ref{sec:repo}.
 
 %% ============================================================
 \section{Limitations and Future Work}
@@ -658,12 +648,11 @@ A recorded walkthrough is linked in Section~\ref{sec:repo}.
 %% ============================================================
 
 \begin{itemize}[leftmargin=2.2em]
-    \item \textbf{Ten classes is a small vocabulary.} UrbanSound8K's taxonomy is urban and outdoor-oriented. A deployed assistive device would need the household sounds that matter most --- doorbell, smoke alarm, name being called --- which are only partly available in ESC-50 and would require either a combined taxonomy or purpose-built data collection.
-    \item \textbf{Clean recordings, noisy world.} Both datasets contain reasonably isolated events. Real environments layer sounds continuously, and a single-label classifier cannot express ``a siren \emph{and} street music''. Multi-label classification with sound event detection over time would be the correct formulation.
-    \item \textbf{Fixed four-second windows.} A gunshot lasts a fraction of a second and is padded with silence; a jackhammer may run continuously and be truncated. Variable-length modelling, or attention pooling over longer contexts, would fit the data better.
-    \item \textbf{Novelty detection is a coarse instrument.} Reconstruction error indicates that an input is unfamiliar but not what it is, and the threshold trades false alarms against missed detections along a single axis. A production system would likely need per-class confidence calibration in addition.
-    \item \textbf{Single-microphone, single-device evaluation.} Performance was not measured across different microphones, room acoustics, or distances, all of which shift the spectrogram distribution. Domain robustness was not evaluated.
-    \item \textbf{Comparison scope.} A transfer-learning baseline --- fine-tuning a network pretrained on AudioSet, for instance --- would contextualise the results against what is achievable with substantially more pretraining data, and is the most obvious next experiment.
+    \item \textbf{Small vocabulary.} UrbanSound8K's taxonomy is urban and outdoor-oriented; a deployed device would need the household sounds that matter most (doorbell, smoke alarm, name being called), requiring a combined taxonomy or purpose-built data collection.
+    \item \textbf{Clean recordings, noisy world.} Both datasets contain isolated events, but real environments layer sounds continuously, and a single-label classifier cannot express ``a siren \emph{and} street music''. Multi-label sound event detection over time is the correct formulation.
+    \item \textbf{Fixed four-second windows.} A gunshot is padded with silence; a continuous jackhammer is truncated. Variable-length modelling or attention pooling would fit the data better.
+    \item \textbf{Coarse novelty detection.} Reconstruction error flags that an input is unfamiliar but not what it is, and the threshold trades false alarms against misses along one axis; per-class calibration would likely be needed in production.
+    \item \textbf{Single-device evaluation.} Robustness across microphones, room acoustics, and distances --- all of which shift the spectrogram distribution --- was not measured. A transfer-learning baseline (fine-tuning an AudioSet-pretrained network) is the obvious next experiment.
 \end{itemize}
 
 %% ============================================================
@@ -673,36 +662,32 @@ A recorded walkthrough is linked in Section~\ref{sec:repo}.
 
 \subsection{Privacy}
 
-An always-listening microphone is among the most privacy-sensitive components that can be placed in a home. The design here mitigates this in one important respect: all inference is local, the four-second buffer is overwritten continuously, and no audio is recorded, transmitted, or stored at any point. A deployed version should preserve that property, since a cloud-based implementation would create a permanent record of domestic conversation as a side effect of listening for a doorbell.
+An always-listening microphone is among the most privacy-sensitive components in a home. The design mitigates this: all inference is local, the four-second buffer is overwritten continuously, and no audio is ever recorded, transmitted, or stored. A deployed version must preserve this, since a cloud implementation would create a permanent record of domestic conversation as a side effect of listening for a doorbell.
 
 \subsection{Asymmetric Consequences of Error}
 
-For an assistive device the two error types are not equivalent. A false alarm is a minor irritation; a missed siren or smoke alarm has real safety consequences. This argues for tuning the safety-critical classes toward recall at the cost of precision --- the opposite of what maximising overall accuracy would suggest --- and it is a reason to report per-class metrics rather than a single headline number.
+The two error types are not equivalent: a false alarm is a minor irritation, whereas a missed siren or smoke alarm has real safety consequences. This argues for tuning the safety-critical classes toward recall at the cost of precision --- the opposite of what maximising overall accuracy suggests --- and for reporting per-class metrics rather than a single headline number.
 
 \subsection{Bias and Dataset Provenance}
 
-Both datasets are drawn from Freesound, and their recordings are geographically skewed toward Europe and North America. Sirens in particular differ substantially between countries, and vehicle horns, alarms, and ambient street noise all vary regionally. A system trained on this data should not be assumed to transfer to Kathmandu without local evaluation and, most likely, local data collection. Presenting such a system as universally applicable would be misleading.
+Both datasets are drawn from Freesound and skewed toward Europe and North America. Sirens especially differ between countries, and horns, alarms, and street noise vary regionally, so this system should not be assumed to transfer to Kathmandu without local evaluation and, most likely, local data collection. Presenting it as universally applicable would be misleading.
 
-\subsection{Accessibility and Appropriate Framing}
+\subsection{Framing, Accessibility, and Licensing}
 
-The application targets Deaf and hard-of-hearing users, and it is important not to overstate what it delivers. The system is a supplementary awareness aid, not a safety-certified alerting device, and it should not be positioned as a replacement for certified accessible smoke alarms. Genuine accessibility work would also require participation from Deaf users in the design process rather than assumptions made on their behalf.
-
-\subsection{Licensing and Attribution}
-
-Both datasets are distributed under Creative Commons Attribution Non-Commercial licences. Their use in this coursework is consistent with those terms, both are cited, and neither is redistributed through the public repository --- the download script retrieves them from their official sources instead.
+The system is a supplementary awareness aid, not a safety-certified alerting device, and must not be positioned as a replacement for certified accessible smoke alarms; genuine accessibility work would also require participation from Deaf users rather than assumptions made on their behalf. Finally, both datasets are Creative Commons Attribution Non-Commercial: their use here is consistent with those terms, both are cited, and neither is redistributed --- the download script retrieves them from their official sources.
 
 %% ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 %% ============================================================
 
-This project built and evaluated a neural network system for recognising urban and household sounds, framed around assistive awareness for Deaf and hard-of-hearing users. Four tasks were performed: ten-class classification with a convolutional network on log-mel spectrograms, novelty detection with a convolutional autoencoder, unsupervised clustering of the learned embedding space, and a controlled architecture comparison with an augmentation ablation. All results follow UrbanSound8K's official ten-fold protocol.
+This project built and evaluated a neural network system for recognising urban and household sounds, framed around assistive awareness for Deaf and hard-of-hearing users. Four tasks were performed under UrbanSound8K's official ten-fold protocol: classification with a convolutional network on log-mel spectrograms, novelty detection with a convolutional autoencoder, unsupervised clustering of the learned embeddings, and an architecture comparison with an augmentation ablation.
 
-The convolutional network reached \cnnAcc\% accuracy and \cnnFone{} macro F1 using \cnnParams{} parameters, outperforming a \mlpParams-parameter perceptron baseline by \cnnVsMlp\ percentage points. Because the baseline is the larger model, the result isolates the contribution of convolutional inductive bias rather than capacity, which is the clearest experimental statement this project makes about why architecture matters. Spectrogram-domain augmentation, tested as a controlled ablation, did not improve on this --- a negative result attributable to the architecture already being well-regularised, and reported honestly rather than omitted. The autoencoder detected previously unheard sounds with ROC-AUC \aeAUC, outperforming the \softmaxAUC\ of the softmax-confidence baseline.
+The convolutional network reached \cnnAcc\% accuracy and \cnnFone{} macro F1 using \cnnParams{} parameters, outperforming the larger \mlpParams-parameter perceptron by \cnnVsMlp\ points. Because the baseline is the larger model, this isolates the contribution of convolutional inductive bias rather than capacity. Augmentation did not improve on it --- a negative result reported honestly and attributed to the architecture already being well-regularised. The autoencoder detected unseen sounds with ROC-AUC \aeAUC, ahead of the \softmaxAUC\ softmax baseline.
 
-Two observations are worth carrying forward. The first is that the classifier's errors are acoustically structured rather than random --- confusion concentrates among sustained broadband machine noises that genuinely resemble one another, while the safety-critical classes sit in the well-separated region of the embedding space. Both the confusion matrix and the t-SNE projection show this independently, which is a stronger form of evidence than either alone. The second is the confidence of the closed-set classifier on inputs it has never seen: mean softmax probability of \novelConf\ on entirely unfamiliar sounds. Accuracy on a fixed test set says nothing about this behaviour, and any system intended to run in an open environment needs an explicit mechanism for expressing that an input falls outside its competence.
+Two observations carry forward. First, the classifier's errors are acoustically structured, not random: confusion concentrates among sustained broadband machine noises, while the safety-critical classes sit in the well-separated region of the embedding space --- shown independently by the confusion matrix and the t-SNE projection. Second, the closed-set classifier is confident on inputs it has never seen (mean softmax \novelConf), which a fixed-test-set accuracy never reveals; any open-environment system needs an explicit way to signal that an input falls outside its competence.
 
-What the project demonstrated most concretely is the specific capability that distinguishes neural networks from the classical methods covered elsewhere in the programme. At no point was an acoustic feature designed by hand. The network was given a time--frequency representation and learned, on its own, the filters that separate a siren from a jackhammer --- and the clustering analysis confirms that the resulting representation is structured enough for the classes to be recovered without labels at all.
+Most concretely, the project demonstrated the capability that distinguishes neural networks from the classical methods covered elsewhere in the programme: no acoustic feature was designed by hand. Given only a time--frequency representation, the network learned the filters that separate a siren from a jackhammer --- and the clustering confirms that representation is structured enough to recover the classes without labels at all.
 
 %% ============================================================
 \section*{References}
