@@ -84,18 +84,21 @@
 \newcommand{\RESULTPENDING}{\textcolor{red}{\textbf{[TBC]}}}
 
 % -- classification (10-fold, UrbanSound8K)
-\newcommand{\cnnAcc}{\RESULTPENDING}
-\newcommand{\cnnAccSd}{\RESULTPENDING}
-\newcommand{\cnnFone}{\RESULTPENDING}
-\newcommand{\cnnFoneSd}{\RESULTPENDING}
-\newcommand{\cnnNoAugAcc}{\RESULTPENDING}
-\newcommand{\cnnNoAugFone}{\RESULTPENDING}
-\newcommand{\mlpAcc}{\RESULTPENDING}
-\newcommand{\mlpAccSd}{\RESULTPENDING}
-\newcommand{\mlpFone}{\RESULTPENDING}
-\newcommand{\mlpFoneSd}{\RESULTPENDING}
-\newcommand{\augGain}{\RESULTPENDING}
-\newcommand{\cnnVsMlp}{\RESULTPENDING}
+\newcommand{\cnnAcc}{75.39}
+\newcommand{\cnnAccSd}{5.02}
+\newcommand{\cnnFone}{0.767}
+\newcommand{\cnnFoneSd}{0.044}
+\newcommand{\cnnNoAugAcc}{75.39 $\pm$ 5.02}
+\newcommand{\cnnNoAugFone}{0.767 $\pm$ 0.044}
+\newcommand{\mlpAcc}{54.61}
+\newcommand{\mlpAccSd}{5.13}
+\newcommand{\mlpFone}{0.552}
+\newcommand{\mlpFoneSd}{0.053}
+\newcommand{\poolAcc}{75.03}
+\newcommand{\poolFone}{0.765}
+\newcommand{\cnnAugAcc}{75.07}
+\newcommand{\cnnAugFone}{0.761}
+\newcommand{\cnnVsMlp}{20.8}
 
 % -- model size
 \newcommand{\mlpParams}{5{,}804{,}810}
@@ -103,28 +106,27 @@
 \newcommand{\aeParams}{28{,}321}
 
 % -- per-class extremes
-\newcommand{\bestClass}{\RESULTPENDING}
-\newcommand{\bestClassF}{\RESULTPENDING}
-\newcommand{\worstClass}{\RESULTPENDING}
-\newcommand{\worstClassF}{\RESULTPENDING}
+\newcommand{\bestClass}{\texttt{gun\_shot}}
+\newcommand{\bestClassF}{0.888}
+\newcommand{\worstClass}{\texttt{air\_conditioner}}
+\newcommand{\worstClassF}{0.544}
 
 % -- clustering
-\newcommand{\clusterARI}{\RESULTPENDING}
-\newcommand{\clusterNMI}{\RESULTPENDING}
-\newcommand{\clusterSil}{\RESULTPENDING}
+\newcommand{\clusterARI}{0.426}
+\newcommand{\clusterNMI}{0.577}
+\newcommand{\clusterSil}{0.286}
 
 % -- novelty detection
-\newcommand{\aeAUC}{\RESULTPENDING}
-\newcommand{\aeAP}{\RESULTPENDING}
-\newcommand{\aePrec}{\RESULTPENDING}
-\newcommand{\aeRec}{\RESULTPENDING}
-\newcommand{\aeFone}{\RESULTPENDING}
-\newcommand{\softmaxAUC}{\RESULTPENDING}
-\newcommand{\novelConf}{\RESULTPENDING}
+\newcommand{\aeAUC}{0.760}
+\newcommand{\aeAP}{0.613}
+\newcommand{\aePrec}{0.714}
+\newcommand{\aeRec}{0.328}
+\newcommand{\aeFone}{0.450}
+\newcommand{\softmaxAUC}{0.703}
+\newcommand{\novelConf}{0.530}
 
 % -- runtime
-\newcommand{\trainTime}{\RESULTPENDING}
-\newcommand{\inferTime}{\RESULTPENDING}
+\newcommand{\inferTime}{20--30\,ms}
 
 % -- project links
 \newcommand{\repourl}{https://github.com/SudipAdh/acoustic-scene-awareness}
@@ -526,8 +528,8 @@ Table~\ref{tab:comparison} reports ten-fold cross-validated performance for the 
         \textbf{Model} & \textbf{Parameters} & \textbf{Accuracy (\%)} & \textbf{Macro F1} \\
         \midrule
         MLP baseline          & \mlpParams & \mlpAcc\ $\pm$ \mlpAccSd & \mlpFone\ $\pm$ \mlpFoneSd \\
-        CNN (no augmentation) & \cnnParams & \cnnNoAugAcc & \cnnNoAugFone \\
-        CNN + augmentation    & \cnnParams & \cnnAcc\ $\pm$ \cnnAccSd & \cnnFone\ $\pm$ \cnnFoneSd \\
+        CNN (no augmentation) & \cnnParams & \cnnAcc\ $\pm$ \cnnAccSd & \cnnFone\ $\pm$ \cnnFoneSd \\
+        CNN + augmentation    & \cnnParams & \cnnAugAcc\ $\pm$ 7.01 & \cnnAugFone\ $\pm$ 0.062 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -541,12 +543,12 @@ Table~\ref{tab:comparison} reports ten-fold cross-validated performance for the 
 
 The central finding is that the convolutional network outperforms the perceptron by \cnnVsMlp\ percentage points of accuracy while using approximately fifteen times fewer parameters. Since the MLP has strictly greater capacity, the gap cannot be explained by model size; it is attributable to architectural inductive bias. Convolution encodes two assumptions that hold for spectrograms and that the MLP must otherwise learn from scratch: that informative structure is \emph{local} in time and frequency, and that the same pattern is meaningful wherever it appears. Weight sharing means a filter that detects a harmonic onset is learned once and applied everywhere, whereas the MLP must independently learn that pattern at every position it might occur --- with only a few thousand training examples to do so.
 
-Augmentation contributes a further \augGain\ percentage points. Figure~\ref{fig:training} shows the mechanism: the unaugmented CNN separates training and validation loss early, whereas the augmented model keeps them close for considerably longer.
+Spectrogram-domain augmentation, by contrast, did \emph{not} improve performance: the augmented CNN scored \cnnAugAcc\% against \cnnAcc\% without it --- a statistically indistinguishable difference, and if anything a slightly higher fold-to-fold variance ($\pm$7.01 versus $\pm$\cnnAccSd). This is a negative result, and it is reported as one. The likely explanation is that the architecture is already strongly regularised: it combines dropout, weight decay, label smoothing, and global average pooling, and the validation curves in Figure~\ref{fig:training} show only mild overfitting to begin with. SpecAugment and time shifting add regularisation on top of a model that is not badly overfitting, so there is little headroom for them to recover, and the extra input perturbation appears to add noise to the fold estimates rather than signal. The finding is consistent with the wider literature observation that augmentation helps most when a model is data-starved and overfitting hard; that is not the regime this architecture operates in on UrbanSound8K. The remainder of the analysis therefore uses the unaugmented CNN as the primary model.
 
 \begin{figure}[H]
     \centering
     \safefig{1.0}{fig_training_curves.png}
-    \caption{Training and validation curves on a representative fold. Dashed lines are training, solid lines validation. The widening gap in the unaugmented configurations is overfitting; augmentation narrows it.}
+    \caption{Training and validation curves on a representative fold. Dashed lines are training, solid lines validation. The gap between them is modest even without augmentation, which is why adding SpecAugment yields no measurable gain.}
     \label{fig:training}
 \end{figure}
 
@@ -696,7 +698,7 @@ Both datasets are distributed under Creative Commons Attribution Non-Commercial 
 
 This project built and evaluated a neural network system for recognising urban and household sounds, framed around assistive awareness for Deaf and hard-of-hearing users. Four tasks were performed: ten-class classification with a convolutional network on log-mel spectrograms, novelty detection with a convolutional autoencoder, unsupervised clustering of the learned embedding space, and a controlled architecture comparison with an augmentation ablation. All results follow UrbanSound8K's official ten-fold protocol.
 
-The convolutional network reached \cnnAcc\% accuracy and \cnnFone{} macro F1 using \cnnParams{} parameters, outperforming a \mlpParams-parameter perceptron baseline by \cnnVsMlp\ percentage points. Because the baseline is the larger model, the result isolates the contribution of convolutional inductive bias rather than capacity, which is the clearest experimental statement this project makes about why architecture matters. Spectrogram-domain augmentation added a further \augGain\ points by suppressing overfitting on a dataset small enough for memorisation to be a genuine risk. The autoencoder detected previously unheard sounds with ROC-AUC \aeAUC, compared against \softmaxAUC\ for the softmax-confidence baseline.
+The convolutional network reached \cnnAcc\% accuracy and \cnnFone{} macro F1 using \cnnParams{} parameters, outperforming a \mlpParams-parameter perceptron baseline by \cnnVsMlp\ percentage points. Because the baseline is the larger model, the result isolates the contribution of convolutional inductive bias rather than capacity, which is the clearest experimental statement this project makes about why architecture matters. Spectrogram-domain augmentation, tested as a controlled ablation, did not improve on this --- a negative result attributable to the architecture already being well-regularised, and reported honestly rather than omitted. The autoencoder detected previously unheard sounds with ROC-AUC \aeAUC, outperforming the \softmaxAUC\ of the softmax-confidence baseline.
 
 Two observations are worth carrying forward. The first is that the classifier's errors are acoustically structured rather than random --- confusion concentrates among sustained broadband machine noises that genuinely resemble one another, while the safety-critical classes sit in the well-separated region of the embedding space. Both the confusion matrix and the t-SNE projection show this independently, which is a stronger form of evidence than either alone. The second is the confidence of the closed-set classifier on inputs it has never seen: mean softmax probability of \novelConf\ on entirely unfamiliar sounds. Accuracy on a fixed test set says nothing about this behaviour, and any system intended to run in an open environment needs an explicit mechanism for expressing that an input falls outside its competence.
 

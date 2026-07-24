@@ -18,10 +18,14 @@ def evaluate_cv_predictions(X, meta, model_name="cnn", folds=None,
     prediction for the entire dataset — the right basis for an aggregate
     confusion matrix and per-class scores.
     """
+    import os
+    import time
+
     folds = folds or list(range(1, C.N_FOLDS + 1))
+    cooldown = float(os.environ.get("COOLDOWN_SEC", "0"))
     all_true, all_pred, all_prob, results = [], [], [], []
 
-    for f in folds:
+    for i, f in enumerate(folds):
         model, res = train_one_fold(
             X, meta, test_fold=f, model_name=model_name,
             epochs=epochs, augment=augment, **kwargs
@@ -34,6 +38,10 @@ def evaluate_cv_predictions(X, meta, model_name="cnn", folds=None,
         yt, yp, pr = predict(model, dl, C.DEVICE)
 
         all_true.append(yt); all_pred.append(yp); all_prob.append(pr)
+
+        if cooldown and i < len(folds) - 1:
+            print(f"  [cooldown] pausing {cooldown:.0f}s (eval fold {i+1}/{len(folds)} done)")
+            time.sleep(cooldown)
 
     return (np.concatenate(all_true), np.concatenate(all_pred),
             np.concatenate(all_prob), results)

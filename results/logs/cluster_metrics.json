@@ -1,0 +1,60 @@
+{
+  "metrics": {
+    "adjusted_rand_index": 0.4258443038804177,
+    "normalized_mutual_info": 0.576592917185358,
+    "silhouette": 0.28644490242004395,
+    "n_clusters": 10
+  },
+  "cluster_purity": {
+    "0": {
+      "dominant_class": "siren",
+      "purity": 0.8360655737704918,
+      "size": 61
+    },
+    "1": {
+      "dominant_class": "children_playing",
+      "purity": 0.3333333333333333,
+      "size": 123
+    },
+    "2": {
+      "dominant_class": "street_music",
+      "purity": 0.7536231884057971,
+      "size": 69
+    },
+    "3": {
+      "dominant_class": "drilling",
+      "purity": 0.9078947368421053,
+      "size": 76
+    },
+    "4": {
+      "dominant_class": "jackhammer",
+      "purity": 0.8181818181818182,
+      "size": 99
+    },
+    "5": {
+      "dominant_class": "gun_shot",
+      "purity": 0.31683168316831684,
+      "size": 101
+    },
+    "6": {
+      "dominant_class": "children_playing",
+      "purity": 0.6176470588235294,
+      "size": 68
+    },
+    "7": {
+      "dominant_class": "dog_bark",
+      "purity": 0.9523809523809523,
+      "size": 42
+    },
+    "8": {
+      "dominant_class": "engine_idling",
+      "purity": 0.927536231884058,
+      "size": 69
+    },
+    "9": {
+      "dominant_class": "air_conditioner",
+      "purity": 0.6201550387596899,
+      "size": 129
+    }
+  }
+}

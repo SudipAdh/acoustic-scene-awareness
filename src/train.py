@@ -198,18 +198,48 @@ def cross_validate(
     tag: str | None = None,
     **kwargs,
 ):
-    """Run the official 10-fold protocol and report mean +/- std."""
+    """Run the official 10-fold protocol and report mean +/- std.
+
+    Two conveniences for long unattended runs, both controlled by environment
+    variables so they never affect the results:
+
+    * ``COOLDOWN_SEC`` pauses between folds to let the GPU shed heat. Folds are
+      independent, so this changes timing only, never the numbers.
+    * ``RESUME=1`` skips a configuration whose cached JSON already covers the
+      requested folds, so a restarted run does not redo finished work. Results
+      are deterministic, so a skipped config is identical to a rerun.
+    """
+    import os
+
     folds = folds or list(range(1, C.N_FOLDS + 1))
+    cooldown = float(os.environ.get("COOLDOWN_SEC", "0"))
+
+    name = tag or f"{model_name}_aug{int(augment)}"
+    out = C.LOGS_DIR / f"cv_{name}.json"
+
+    if os.environ.get("RESUME") == "1" and out.exists():
+        cached = json.loads(out.read_text())
+        if set(cached.get("folds", [])) >= set(folds):
+            print(f"[resume] {name} already complete "
+                  f"({cached['acc_mean']*100:.2f}%) -- skipping")
+            return cached
+
     results: list[FoldResult] = []
 
-    print(f"\n{'='*70}\n{model_name.upper()}  |  folds={folds}  augment={augment}\n{'='*70}")
+    print(f"\n{'='*70}\n{model_name.upper()}  |  folds={folds}  augment={augment}"
+          f"{f'  cooldown={cooldown:.0f}s' if cooldown else ''}\n{'='*70}")
 
-    for f in folds:
+    for i, f in enumerate(folds):
         _, res = train_one_fold(
             X, meta, test_fold=f, model_name=model_name,
             epochs=epochs, augment=augment, **kwargs
         )
         results.append(res)
+
+        if cooldown and i < len(folds) - 1:
+            print(f"  [cooldown] pausing {cooldown:.0f}s to let the GPU cool "
+                  f"(fold {i+1}/{len(folds)} done)")
+            time.sleep(cooldown)
 
     accs = np.array([r.test_acc for r in results])
     f1s = np.array([r.test_f1_macro for r in results])
