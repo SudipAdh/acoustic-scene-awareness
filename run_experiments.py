@@ -272,8 +272,16 @@ def main():
         folds, epochs = [1], 3
         print(">>> QUICK MODE: 1 fold, 3 epochs")
 
-    print(f"device: {C.DEVICE} | torch {torch.__version__}")
-    print(f"folds: {folds} | epochs: {epochs}")
+    import platform
+    banner("ACOUSTIC SCENE AWARENESS — EXPERIMENT RUN")
+    print(f"  host      : {platform.node()}")
+    print(f"  platform  : {platform.platform()}")
+    print(f"  machine   : {platform.machine()} ({platform.processor() or 'Apple silicon'})")
+    print(f"  python    : {platform.python_version()}")
+    print(f"  torch     : {torch.__version__}")
+    print(f"  device    : {C.DEVICE}")
+    print(f"  folds     : {folds}")
+    print(f"  epochs    : {epochs}")
     t0 = time.time()
 
     X, meta = stage_prep(force=args.force_prep)

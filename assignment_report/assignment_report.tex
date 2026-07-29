@@ -803,7 +803,25 @@ bash scripts/download_data.sh
 \label{app:evidence}
 %% ============================================================
 
-\textcolor{red}{\textbf{[Insert screen captures of each experiment stage executing, showing the device and software environment, per the assignment brief.]}}
+The staged runner (\texttt{run\_experiments.py}) executes the full pipeline --- feature preparation, the MLP-versus-CNN comparison, the final CNN evaluation, embedding clustering, and autoencoder novelty detection --- on the development machine. The captures below are from a fast verification run (one fold, three epochs) that exercises every stage end to end; the environment banner confirms the Apple~M1 host and the Metal (\texttt{mps}) device. The headline accuracies reported in Section~\ref{sec:results} come from the full 10-fold, 40-epoch protocol rather than this short run, so the per-fold numbers shown here are intentionally lower.
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.92}{fig_evidence_run.png}
+  \caption{Environment banner and the architecture-comparison stage running on the Apple~M1 (\texttt{device: mps}). The MLP and CNN are trained and scored on the official fold split.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.92}{fig_evidence_metrics.png}
+  \caption{The final-evaluation stage emitting the per-class precision, recall, and F1 report, then writing the confusion-matrix and per-class figures used in the report.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.92}{fig_evidence_novelty.png}
+  \caption{The clustering and novelty-detection stages: t-SNE/k-means metrics on the learned embeddings, followed by the autoencoder novelty ROC-AUC against the softmax-confidence baseline.}
+\end{figure}
 
 %% ============================================================
 \section{Key Implementation Code}
@@ -812,6 +830,34 @@ bash scripts/download_data.sh
 
 The complete, runnable source code is public at \url{\repourl}; the entire codebase is therefore not reproduced here. The listings below capture the sections most important to understanding the implementation, and the five core excerpts (the log-mel front-end, the official fold split, the CNN forward pass, the novelty score, and the threshold calibration) appear inline in Section~\ref{sec:impl}. Screen captures of these sections in the development environment follow.
 
-\textcolor{red}{\textbf{[Insert screenshots of the important code sections (e.g.\ \texttt{src/models.py} AudioCNN and ConvAutoencoder, \texttt{src/data.py} mel-spectrogram and fold split, \texttt{src/train.py} cross-validation loop, \texttt{demo/live\_demo.py} inference), taken in your editor. Formatted versions of these are already shown inline in Section~\ref{sec:impl}.]}}
+\begin{figure}[H]
+  \centering
+  \safefig{0.9}{fig_code_melspec.png}
+  \caption{The log-mel front-end (\texttt{src/data.py}): the ``audio becomes an image'' step that turns each clip into a decibel-scaled time--frequency matrix the CNN consumes like a grayscale image.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.9}{fig_code_foldsplit.png}
+  \caption{The official UrbanSound8K fold split (\texttt{src/data.py}), which keeps every clip in exactly one test fold and prevents the recording-level leakage that inflates naive random splits.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.9}{fig_code_cnn.png}
+  \caption{The convolutional classifier (\texttt{src/models.py}): four \texttt{ConvBlock}s followed by global average pooling, with \texttt{return\_embedding} exposing the 256-d features used for clustering.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.9}{fig_code_autoencoder.png}
+  \caption{The convolutional autoencoder (\texttt{src/models.py}) used for novelty detection; \texttt{reconstruction\_error} yields the per-clip score that flags out-of-distribution sounds.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safefig{0.9}{fig_code_crossval.png}
+  \caption{The 10-fold cross-validation loop (\texttt{src/train.py}), including the environment-controlled cooldown and resume conveniences for long unattended runs.}
+\end{figure}
 
 \end{document}
