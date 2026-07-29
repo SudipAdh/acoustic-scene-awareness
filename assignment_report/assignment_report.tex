@@ -130,7 +130,7 @@
 
 % -- project links
 \newcommand{\repourl}{https://github.com/SudipAdh/acoustic-scene-awareness}
-\newcommand{\youtubeurl}{\textcolor{red}{\textbf{[YOUTUBE DEMO LINK TO BE INSERTED]}}}
+\newcommand{\youtubeurl}{\url{https://www.loom.com/share/1cc55da678dd492da9950399a7c5a3e7}}
 \newcommand{\dsurbanurl}{https://urbansounddataset.weebly.com/urbansound8k.html}
 \newcommand{\dsescurl}{https://github.com/karolpiczak/ESC-50}
 
@@ -498,7 +498,7 @@ All source code, the LaTeX sources for this report, generated figures, per-exper
 \begin{itemize}[leftmargin=2.2em]
     \item \textbf{Source code repository} (public GitHub):\\
           \url{\repourl}
-    \item \textbf{Demonstration video} (YouTube):\\
+    \item \textbf{Demonstration video} (Loom):\\
           \youtubeurl
     \item \textbf{Live demonstration application:} \texttt{demo/live\_demo.py} in the repository.
     \item \textbf{Generated figures and metrics:} \texttt{results/figures/} and \texttt{results/logs/} in the repository.
@@ -762,7 +762,7 @@ A. Paszke et al., ``PyTorch: An imperative style, high-performance deep learning
           \url{\dsurbanurl}
     \item \textbf{Dataset --- ESC-50} (unseen sounds for novelty detection, 2{,}000 clips):\\
           \url{\dsescurl}
-    \item \textbf{YouTube demonstration video:}\\
+    \item \textbf{Demonstration video (Loom):}\\
           \youtubeurl
 \end{itemize}
 
@@ -773,7 +773,39 @@ The repository is public and contains the complete source code, the LaTeX source
 \label{app:proposal}
 %% ============================================================
 
-\textcolor{red}{\textbf{[Paste the approved project proposal here, exactly as submitted, per the assignment brief.]}}
+This appendix reproduces the project proposal as resubmitted through the module portal. The title was updated at the module leader's request to name the neural networks used (a convolutional neural network with an autoencoder), which the final implementation follows.
+
+\subsection*{Proposed Title}
+\textit{Acoustic Scene Awareness: A Deep Learning System for Urban and Household Sound Recognition with Novel-Sound Anomaly Detection for the Deaf and Hard-of-Hearing using Convolutional Neural Networks with Autoencoder-Based Novel-Sound Detection.}
+
+\subsection*{Problem and Motivation}
+People who are Deaf or hard of hearing miss safety-relevant sounds in their environment --- a car horn, a siren, a smoke alarm, breaking glass. A system that recognises everyday sounds and surfaces them visually would provide useful ambient awareness. The key requirement for such a device is not only to classify familiar sounds accurately, but to recognise when a sound is \emph{unfamiliar} and flag it as unknown, rather than confidently mislabelling it. This project builds and rigorously evaluates a neural system for exactly that setting, deliberately avoiding any use of healthcare or clinical data.
+
+\subsection*{Proposed Approach}
+Audio is converted to log-mel spectrograms, which turn each clip into an image-like time--frequency representation. A convolutional neural network (CNN) then classifies the sound, while a separate convolutional autoencoder scores how well each clip can be reconstructed; a high reconstruction error indicates a novel, out-of-distribution sound. The system therefore performs \emph{two} tasks --- closed-set classification and open-set novelty detection --- satisfying the brief's multi-task requirement.
+
+\subsection*{Objectives}
+\begin{enumerate}[leftmargin=2.2em]
+    \item Train a CNN to classify ten urban sound classes from log-mel spectrograms under the dataset's official ten-fold cross-validation protocol.
+    \item Compare the CNN against a larger multi-layer perceptron baseline to isolate the benefit of convolutional inductive bias from raw capacity.
+    \item Evaluate spectrogram-domain data augmentation (SpecAugment and time shifting) as a controlled ablation.
+    \item Implement autoencoder-based novelty detection so unfamiliar sounds are reported as unknown, and benchmark it against a softmax-confidence baseline using genuinely unseen classes.
+    \item Analyse the learned representation without labels via k-means clustering and t-SNE projection of the network's embeddings.
+    \item Deliver a real-time demonstration running from a laptop microphone.
+\end{enumerate}
+
+\subsection*{Datasets}
+\begin{itemize}[leftmargin=2.2em]
+    \item \textbf{UrbanSound8K} --- 8{,}732 labelled clips across ten urban sound classes, used for training and the ten-fold evaluation. \url{\dsurbanurl}
+    \item \textbf{ESC-50} --- an environmental-sound dataset from which a set of household/safety classes never seen during training is drawn, used only to evaluate novelty detection. \url{\dsescurl}
+\end{itemize}
+Neither dataset contains healthcare or personal medical information.
+
+\subsection*{Expected Outcomes and Evaluation}
+A trained CNN classifier reported with mean $\pm$ standard deviation accuracy and macro-F1 over the ten official folds; a quantified MLP-versus-CNN comparison and augmentation ablation; a novelty detector reported with ROC-AUC and average precision against the softmax baseline; unsupervised clustering metrics on the learned embeddings; and a working real-time microphone demonstration. All code is released in a public repository and the results are written up in this report.
+
+\subsection*{Tools}
+Python, PyTorch (with Apple Metal / MPS acceleration), librosa for the audio front-end, and scikit-learn for clustering and metrics.
 
 %% ============================================================
 \section{Reproduction Instructions}
